@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Opencv.js exercise #3: access the camera</title>
+  <meta charset="utf-8">
+</head>  
+<body>
+  <section id="cameraSection">
+  <h2 id='status'>opencv.js is loading...</h2> 
+      <div>
+        <button id="enableWebcamButton" disabled>Open the camera</button>
+        <button id="disableWebcamButton" disabled>Close the camera</button>
+      </div>
+      <div id="liveView">  
+        <video id="webcam" autoplay width="320" height="240"></video>
+        <canvas id="outputCanvas"></canvas>
+      </div>
+  </section>
+  
+  <!-- Import the page's JavaScript to do some stuff -->
+  <script src="camOpencv.js"></script>
+  <script async src="opencv.js" onload="onOpenCvReady();" type="text/javascript"></script>
+</body>
+</html>
