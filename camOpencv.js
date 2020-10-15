@@ -1,13 +1,43 @@
+const m1 = document.querySelector("#mission1") ;
+const m2 = document.querySelector("#mission2") ;
 const video = document.querySelector('#webcam');
 const enableWebcamButton = document.querySelector('#enableWebcamButton');
+const enableWebcamButton2 = document.querySelector('#enableWebcamButton2') ;
 const disableWebcamButton = document.querySelector('#disableWebcamButton');
 const canvas = document.querySelector('#outputCanvas');
+const lowThresBox = document.querySelector('#lowThresInput') ;
+const highThresBox = document.querySelector('#highThresInput') ;
 
 function onOpenCvReady() {
     document.querySelector('#status').innerHTML = 'opencv.js is ready.';
     /* enable the button */
-    enableWebcamButton.disabled = false;
-  }
+    m1.addEventListener('change', prepare) ;
+    m2.addEventListener('change', prepare) ;
+}
+
+function prepare() {
+    if ( m1.checked ) {
+        if ( !disableWebcamButton2.disabled ) {
+            disableCam(disableWebcamButton2) ;
+            // disableWebcamButton2.disabled = true ;
+        } // if()
+        lowThresBox.disabled = false ;
+        highThresBox.disabled = false ;
+        enableWebcamButton.disabled = false;
+        disableWebcamButton.disabled = true ;
+        enableWebcamButton2.disabled = true ;
+    } // if()
+    else if ( m2.checked ) {
+        if ( !disableWebcamButton.disabled ) {
+            disableCam(disableWebcamButton) ;
+            // disableWebcamButton.disabled = true ;
+        } // if()
+        enableWebcamButton2.disabled = false ;
+        lowThresBox.disabled = true ;
+        highThresBox.disabled = true ;
+        enableWebcamButton.disabled = true ;
+    } // else if()
+}
 
 /* Check if webcam access is supported. */
 function getUserMediaSupported() {
@@ -28,17 +58,23 @@ function getUserMediaSupported() {
   
   if (getUserMediaSupported()) {
     enableWebcamButton.addEventListener('click', enableCam);
+    enableWebcamButton2.addEventListener('click', enableCam) ;
     disableWebcamButton.addEventListener('click', disableCam);
+    disableWebcamButton2.addEventListener('click', disableCam);
+    lowThresBox.addEventListener('change', numCheck) ;
+    highThresBox.addEventListener('change', numCheck) ;
   } else {
     console.warn('getUserMedia() is not supported by your browser');
   }
 
   function enableCam(event) {
+    if ( !numCheck() ) return ;
     /* disable this button once clicked.*/
     event.target.disabled = true;
       
     /* show the disable webcam button once clicked.*/
-    disableWebcamButton.disabled = false;
+    if ( m1.checked ) disableWebcamButton.disabled = false ;
+    else disableWebcamButton2.disabled = false;
   
     /* show the video and canvas elements */
     document.querySelector("#liveView").style.display = "block";
@@ -59,8 +95,10 @@ function getUserMediaSupported() {
   };
   
   function disableCam(event) {
+      console.log("here: ", event) ;
       event.target.disabled = true;
-      enableWebcamButton.disabled = false;
+      if ( m1.checked ) enableWebcamButton.disabled = false;
+      else enableWebcamButton2.disabled = false;
   
       /* stop streaming */
       video.srcObject.getTracks().forEach(track => {
@@ -88,10 +126,54 @@ function getUserMediaSupported() {
     processFrame(frame);
 }
 
+function numCheck() {
+    let lowThresElement = document.getElementById("lowThresInput") ;
+    let highThresElement = document.getElementById("highThresInput") ;
+    let low = true ;
+    let high = true ;
+    let result = false ;
+
+    var re = /^[0-9]+$/ ;
+
+    if ( !re.test(lowThresElement.value)) {
+        alert("Low Threshold Error: Only number is avaliable!!!") ;
+        lowThresElement.value = "" ;
+        low = false ;
+    } // if()
+    
+    if ( !re.test(highThresElement.value)) {
+        alert("High Threshold Error: Only number is avaliable!!!") ;
+        highThresElement.value = "" ;
+        high = false ;
+    } // if()
+    
+    if ( !low && !high ) {
+        document.getElementById("err").innerHTML = "Please refill the Low threshold feild and High threshold feild!" ;
+    } // if()
+    else if ( !low ) {
+        document.getElementById("err").innerHTML = "Please refill the Low threshold feild!" ;
+    } // else if()
+    else if ( !high ) {
+        document.getElementById("err").innerHTML = "Please refill the High threshold feild!" ;
+    } // else if()
+    else {
+        document.getElementById("err").innerHTML = "" ;
+        result = true ;
+    } // else()
+
+    return result ;
+} // numCheck
+
 function processFrame(src) {
     let dst = new cv.Mat();
+    let lowThresElement = document.getElementById("lowThresInput") ;
+    let highThresElement = document.getElementById("highThresInput") ;
+
     cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY);
-    cv.Canny(src, dst, 100, 200);
+    console.log("type: ",typeof(lowThres));
+    //console.log("low: ", lowThres);
+    //console.log("high: ",highThres) ;
+    cv.Canny(src, dst, parseInt(lowThresElement.value, 10), parseInt(highThresElement.value, 10));
     cv.imshow('outputCanvas', dst);
     src.delete();
     dst.delete();
